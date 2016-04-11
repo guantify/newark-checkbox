@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Layer selector example | CartoDB.js</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <link rel="shortcut icon" href="http://cartodb.com/assets/favicon.ico" />
+    <script src="http://libs.cartocdn.com/cartodb.js/v3/3.15/cartodb.js"></script>
+
+    <style>
+        html, body, #map {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        #layer_selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 0;
+        }
+        #layer_selector ul {
+            padding: 0; margin: 0;
+            list-style-type: none;
+        }
+        #layer_selector li {
+            border-bottom: 1px solid #999;
+            padding: 15px 30px;
+            font-family: "Helvetica", Arial;
+            font-size: 13px;
+            color: #444;
+            cursor: auto;
+        }
+    </style>
+    <link rel="stylesheet" href="http://libs.cartocdn.com/cartodb.js/v3/3.15/themes/css/cartodb.css" />
+</head>
+
+<body>
+    <div id="map"></div>
+    <div id="layer_selector" class="cartodb-infobox">
+        <ul class="main">
+            <li><input type="checkbox" class="checkbox" id="select_all" value="all" checked=true/>All Locations</li>
+            <ul>
+
+                <li><input type="checkbox" class="checkbox" value="hope"/>Center of Hope</li>
+                <li><input type="checkbox" class="checkbox" value="entertainment"/>Entertainment</li>
+                <li><input type="checkbox" class="checkbox" value="government"/>Government</li>
+                <li><input type="checkbox" class="checkbox" value="recreation"/>Recreation Center</li>
+                <li><input type="checkbox" class="checkbox" value="schools"/>Schools</li>
+                <li><input type="checkbox" class="checkbox" value="statues"/>Statues &amp; Monuments</li>
+                <li><input type="checkbox" class="checkbox" value="restaurants"/>Restaurants</li>
+                <li><input type="checkbox" class="checkbox" value="cafe"/>Cafe's &amp; Deli's</li>
+                <li><input type="checkbox" class="checkbox" value="public safety"/>Public Safety</li>
+                <li><input type="checkbox" class="checkbox" value="libraries"/>Libraries &amp; Books</li>
+                <li><input type="checkbox" class="checkbox" value="parks"/>Parks</li>
+
+            </ul>
+        </ul>
+    </div>
+
+    <script>
+        // create layer selector
+        function createSelector(layer) {
+            var sql = new cartodb.SQL({ user: 'documentation' });
+            $('.checkbox').on('click', function() {
+                var type = "";
+                // each checked type of location will be added to query
+                $('.checkbox').each(function() {
+                    if (this.checked) {
+                        type += "\"%" + this.value + "%\",";
+                    }
+                    // if none is checked then all will display
+                    if ($('.checkbox:checked').length == 0) {
+                        var query = "SELECT * FROM cityvibes";
+                    // concatenating query string
+                    } else {
+                        var query = "SELECT * FROM cityvibes WHERE LOWER(typeoflocation) LIKE ANY ('{" + type;
+                        query = query.substring(0, query.length - 1) + "}')";
+                    }
+                    // change the query in the layer to update the map
+                    layer.setSQL(query);
+                });
+            });
+        }
+
+      function main() {
+        cartodb.createVis('map', 'https://ivanquan.cartodb.com/api/v2/viz/358fe382-ff84-11e5-bfca-0e674067d321/viz.json', {
+          tiles_loader: true,
+          center_lat: 40.735657,
+          center_lon: -74.172367,
+          zoom: 13
+        })
+        .done(function(vis, layers) {
+          // layer 0 is the base layer, layer 1 is cartodb layer
+          var subLayer = layers[1].getSubLayer(0);
+          createSelector(subLayer);
+        })
+        .error(function(err) {
+          console.log(err);
+        });
+      }
+      window.onload = main;
+    </script>
+
+    <script type="text/javascript">
+    // logic for select all checkboxes
+    $(document).ready(function(){
+        $('#select_all').on('click',function(){
+            if(this.checked){
+                $('.checkbox').each(function(){
+                    this.checked = true;
+                });
+            }else{
+                $('.checkbox').each(function(){
+                    this.checked = false;
+                });
+            }
+        });
+
+        $('.checkbox').on('click',function(){
+            if($('.checkbox:checked').length == $('.checkbox').length){
+                $('#select_all').prop('checked',true);
+            }else{
+                $('#select_all').prop('checked',false);
+            }
+        });
+    });
+    </script>
+</body>
+</html>
